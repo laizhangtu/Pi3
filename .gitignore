@@ -10,6 +10,11 @@
 
 **/__pycache__/
 
+uv.lock
+/input_images_*
+.history
+.gradio
+
 .vscode
 ckpts
 
@@ -24,3 +29,4 @@ ckpts
 
 resize_demo_imgs.py
 img_dir_to_video.py
+.gradio/certificate.pem
