@@ -18,11 +18,19 @@ if __name__ == '__main__':
                         help="Path to the model checkpoint file. Default: None")
     parser.add_argument("--device", type=str, default='cuda',
                         help="Device to run inference on ('cuda' or 'cpu'). Default: 'cuda'")
+    parser.add_argument("--conf_thresh", type=float, default=0.1,
+                        help="Confidence threshold for mask (float between 0 and 1). Default: 0.1.")
                         
     args = parser.parse_args()
     if args.interval < 0:
         args.interval = 10 if args.data_path.endswith('.mp4') else 1
     print(f'Sampling interval: {args.interval}')
+
+    if args.conf_thresh < 0.0 or args.conf_thresh > 1.0:
+        clipped = min(max(args.conf_thresh, 0.0), 1.0)
+        print(f"Warning: conf_thresh {args.conf_thresh} out of [0,1], clipping to {clipped}.")
+        args.conf_thresh = clipped
+    print(f"Using confidence threshold: {args.conf_thresh}")
 
     # from pi3.utils.debug import setup_debug
     # setup_debug()
@@ -55,7 +63,7 @@ if __name__ == '__main__':
             res = model(imgs[None]) # Add batch dimension
 
     # 4. process mask
-    masks = torch.sigmoid(res['conf'][..., 0]) > 0.1
+    masks = torch.sigmoid(res['conf'][..., 0]) > args.conf_thresh
     non_edge = ~depth_edge(res['local_points'][..., 2], rtol=0.03)
     masks = torch.logical_and(masks, non_edge)[0]
 
